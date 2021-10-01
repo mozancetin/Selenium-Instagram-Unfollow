@@ -6,18 +6,29 @@ kullanici_adi = str(input("Instagram Username: "))
 sifre = str(input("Password: "))
 
 op = webdriver.ChromeOptions()
+op.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36")
 op.add_argument("--headless")
-op.add_argument("--window-size=1920, 1080")
+op.add_argument("--incognito")
+op.add_argument("--disable-extensions")
+op.add_argument("--proxy-server='direct://'")
+op.add_argument("--proxy-bypass-list=*")
+op.add_argument("--start-maximized")
+op.add_argument('--disable-gpu')
+op.add_argument('--disable-dev-shm-usage')
+op.add_argument('--no-sandbox')
+op.add_argument('--ignore-certificate-errors')
 browser = webdriver.Chrome(options=op)
 
 # Giriş Yap
 browser.get("https://www.instagram.com/")
-print("Logging in.")
+print(">> Logging in.")
 
 time.sleep(2)
-
-username = browser.find_element_by_name("username")
-password = browser.find_element_by_name("password")
+try:
+    username = browser.find_element_by_name('username')
+    password = browser.find_element_by_name('password')
+except Exception:
+    browser.get_screenshot_as_file("screenshot.png")
 
 username.send_keys(kullanici_adi)
 password.send_keys(sifre)
@@ -25,35 +36,19 @@ password.send_keys(sifre)
 loginButton = browser.find_element_by_xpath('//*[@id="loginForm"]/div/div[3]/button')
 loginButton.click()
 
-time.sleep(3)
+time.sleep(5)
 
-menu = browser.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[1]/a')
-menu.click()
-
-print("Successfully Logged In!")
-
-time.sleep(2)
-
-# Takipçi Sayfasına Ulaş
-print("Going to the follower page.")
-
-profilButton = browser.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[3]/div/div[5]/span')
-profilButton.click()
-time.sleep(2)
-
-profil = browser.find_element_by_xpath('//*[@id="react-root"]/section/nav/div[2]/div/div/div[3]/div/div[5]/div[2]/div/div[2]/div[2]/a[1]')
-profil.click()
-
-time.sleep(2)
-
+browser.get(f"https://www.instagram.com/{kullanici_adi}/followers/")
+time.sleep(5)
 followers = browser.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[2]/a')
 followers.click()
 
-print("Going to the follower page has been successfully completed!")
+
+print("\n>> Going to the follower page has been successfully completed!")
 time.sleep(3)
 
 # Takipçileri Al
-print("Getting followers. (This process may take time depending on how many followers you have.)")
+print(">> Getting followers. (This process may take time depending on how many followers you have.)")
 
 jscommand = """
 followers = document.querySelector(".isgrP");
@@ -66,7 +61,7 @@ lenOfPage = browser.execute_script(jscommand)
 match=False
 while(match==False):
     lastCount = lenOfPage
-    time.sleep(1)
+    time.sleep(3)
     lenOfPage = browser.execute_script(jscommand)
     if lastCount == lenOfPage:
         match=True
@@ -86,7 +81,7 @@ for kisi in kisiler:
     takipci = kisi.text
     takipciler.append(takipci)
 
-print("Followers have been successfully received. Editing database.")
+print(">> Followers have been successfully received. Editing database.")
 time.sleep(2)
 
 def addFollower():
@@ -108,7 +103,7 @@ def addFollower():
             sorgu3 = "INSERT INTO unfollow VALUES(?)"
             cursor.execute(sorgu3, (dbKisi[0],))
             db.commit()
-            print(f"{dbKisi[0]} has stopped following you!")
+            print(f">> {dbKisi[0]} has stopped following you!")
     
     for i in takipciler:
         sorgu4 = "SELECT * FROM unfollow WHERE username = ?"
@@ -126,7 +121,7 @@ def addFollower():
         print(f"New follower: {i}")
     
     db.close()
-    print("Process completed. You can close the program and browse the database.")
+    print(">> Process completed. You can close the program and browse the database.")
 
 addFollower()
 time.sleep(2)
